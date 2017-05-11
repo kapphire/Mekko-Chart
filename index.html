@@ -1,0 +1,83 @@
+<!doctype html>
+<html>
+<head>
+	<title>Mekko Chart </title>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1.0, maximum-scale=1.0">
+	<link rel="stylesheet" href="static/css/style.css" />
+	<link rel="stylesheet" href="static/css/font-awesome.css" />
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+	<link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,700" rel="stylesheet">
+</head>
+<body>
+<div class="main">
+	<h1 style="padding-left: 50px;">Mekko Chart</h1>
+	<div id="chart" class="scheme2">
+		<div id="tiles"></div>
+		<ul id="vticks" class="ticks">
+			<li>100</li>
+			<li>75</li>
+			<li>50</li>
+			<li>25</li>
+			<li></li>
+		</ul>
+		<ul id="hticks" class="ticks">
+			<li>0</li>
+			<li>25</li>
+			<li>50</li>
+			<li>75</li>
+			<li>100</li>
+		</ul>
+		<ul id="labels" class="ticks">
+			
+		</ul>
+	</div>
+</div>
+<script>
+var data =  {% raw data %}
+var width = 800;
+var height = 500;
+window.onload = function() {
+		
+	chart = $("#chart");
+	chart.css("width", width+"px");
+	chart.css("height", height+"px");
+	
+	tiles = $("#tiles");
+	tiles.css("width", (width-50)+"px");
+	tiles.css("height", (height-100)+"px");
+	
+	hticks = $("#hticks");
+	hticks.css("width", (width-50)+"px");
+
+	vticks = $("#vticks");
+	vticks.css("height", (height-100)+"px");
+	
+	labels = $("#labels");
+	labels.css("width", (width-50)+"px");
+	
+	for (var customer in data) {
+		if (customer!='Total') {
+			var column = $("<div class='column'></div>");
+			var columnWidth = data[customer]['Total']/data['Total']*100;
+			column.css("width", columnWidth + "%");
+			for (var region in data[customer]) {
+				if (region!='Total') {
+					var div = $("<div class='area'><div class='content'>"+region+"</div></div>");
+					
+					var divHeight = data[customer][region]/data[customer]['Total']*100;
+					div.css("height", divHeight+"%");
+					column.append(div);
+				}
+			}
+			tiles.append(column);
+			
+			var label = $("<li>"+customer+"</li>");
+			label.css("width", columnWidth + "%");
+			labels.append(label);
+		}
+	}
+}
+</script>
+</body>
+</html>

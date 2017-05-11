@@ -1,0 +1,362 @@
+.inputbox:focus,
+input:focus,
+select:focus,
+textarea:focus,
+button:focus {
+    outline: none;
+}
+[hidden] { display: none; }
+
+.flex-container {
+	display: -webkit-box;
+	display: -moz-box;
+	display: -ms-flexbox;
+	display: flex;
+	-webkit-box-orient: vertical;
+	-moz-box-orient: vertical;
+	-webkit-box-direction: normal;
+	-moz-box-direction: normal;
+	-webkit-flex-direction: column;
+	-ms-flex-direction: column;
+	flex-direction: column;
+}
+.flex {
+    -webkit-box-basis: auto;
+    -webkit-flex-basis: auto;
+    -ms-flex-basis: auto;
+    flex-basis: auto;
+    -webkit-box-flex: 1;
+    -moz-box-flex: 1;
+    -webkit-flex: 1;
+    -ms-flex: 1 1 auto;
+    flex: 1;
+}
+
+html {
+	width: 100%;
+	height: 100%;
+	background: url('../images/bg3.jpg');
+	background-size: cover;
+	background-position: center center;
+}
+body {
+	margin:0;
+	padding:0;
+	width:100%;
+	height:100%;
+	font-family: 'Roboto';
+	color: #FFF;
+}
+
+
+
+
+
+.uploadbox {
+	position: relative;
+	width: 100%;
+	height: 120px;
+	#outline: 2px dashed #92b0b3;
+	outline: 2px dashed #FFF;
+	display: table;
+	#color: #92b0b3;
+	transition: background-color 0.3s linear, color 0.3s linear, outline-color 0.3s linear;
+}
+.uploadbox.hover {
+	background-color: rgba(255,255,255,1);
+	color: #000;
+	outline-color: #FFF;
+}
+.uploadbox.start {
+	color: #FFF;
+	outline-color: #FFF;	
+}
+.uploadbox .progress {
+	#position: absolute;
+	width: 20%;
+	height: 100%;
+	background: rgba(255,255,255,1);
+	transition: width 0.3s ease-out;
+}
+.uploadbox .progressbox {
+	width: 150px;
+	height: 5px;
+	display: inline-block;
+	padding: 1px;
+	border: 1px solid #FFF;
+}
+.screen {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translateY(-50%) translateX(-50%);
+	display: none;
+	padding-top: 1px;
+}
+.screen.active {
+	display: block;
+}
+.dropscreen {
+	width: 100%;
+}
+.dropscreen .icon {
+    width: 100%;
+    fill: currentColor;
+    display: block;
+    margin-bottom: 10px;
+	pointer-events: none;
+	text-align: center;
+}
+.dropscreen .icon i {
+	font-size: 50px;
+}
+.uploadbox .label {
+	font-size: 18px;
+	text-align: center;
+	display: inline-block;
+	width: 100%;
+	#pointer-events: none;
+}
+.donescreen {
+	width: 430px;
+}
+.donescreen .column {
+	float:left;
+	width: 130px;
+	margin-right: 20px;
+	box-sizing: border-box;
+}
+.donescreen .column:last-child{
+	margin-right: 0px;
+}
+.donescreen li, .donescreen ul {
+	list-style:none;
+	margin: 0;
+	padding: 0;
+}
+.donescreen li {
+	display: block;
+	padding: 2px 5px;
+	background: rgba(0,0,0,0);
+	cursor: pointer;
+	box-sizing: border-box;
+	border: 1px solid #FFF;
+	margin-bottom: 4px;
+}
+.donescreen li:hover, .donescreen li.selected {
+	background: #FFF;
+	color: #000;
+}
+.donescreen li.disabled{
+	opacity: 0.5;
+}
+.donebutton {
+	padding: 5px 18px;
+	#background: #FFF;
+	color: #FFF;
+	float: right;
+	cursor: pointer;
+	font-weight: 500;
+	#text-transform: uppercase;
+	margin-top: 25px;
+	letter-spacing: 0px;
+	font-size: 16px;
+	border: 1px solid #FFF;
+}
+.donebutton:hover {
+	background: #FFF;
+	color: #000;
+}
+.finishscreen {
+	text-align: center;
+}
+
+.main {
+	position: absolute;
+	left: 0;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	margin: auto;
+	width: 1200px;
+	height: 550px;
+}
+#options {
+	position:relative;
+	width: 250px;
+	height: 100%;
+	float:left;
+	background: rgba(0,0,0,0.7);
+	box-sizing: border-box;
+	padding: 15px;
+}
+#options h3 {
+	margin-bottom: 5px;
+}
+#options select {
+	padding: 2px 5px;
+	border: 1px solid #FFF;
+	background: none;
+	width: 100%;
+	height: 30px;
+	box-sizing: border-box;
+	color: #FFF;
+	font-size: 16px;
+}
+#options select option {
+	background: #000;
+}
+.chartbox {
+	width: 950px;
+	color: #000;
+	box-sizing: border-box;
+	padding: 25px 10px;
+	height: 100%;
+	float: right;
+	background: #FFF;
+}
+#chart {
+	position:relative;
+	width: 900px;
+	height: 500px;
+}
+#tiles {
+	position: absolute;
+	left: 50px;
+	top: 0;
+}
+#vticks {
+	width: 50px;
+	position:absolute;
+	top: 0;
+	padding: 0px 5px;
+	box-sizing: border-box;
+}
+#hticks {
+	position: absolute;
+	height: 50px;
+	bottom: 0px;
+	left: -150px;
+	box-sizing: border-box;
+	padding: 5px 0px;
+	white-space: nowrap;
+}
+#hticks li {
+	display: inline-block;
+	height: 100%;
+	width: 25%;
+	text-align: right;
+}
+#vticks li {
+	height: 25%;
+	width: 100%;
+	text-align: right;
+}
+#labels {
+	right: 0;
+	bottom: 0px;
+	position: absolute;
+}
+#labels li {
+	text-align:center;
+	display: inline-block;
+}
+.ticks {
+	display:block;
+	padding: 0;
+	margin: 0;
+}
+.ticks li {
+	list-style: none;
+}
+.area {
+	position:relative;
+	#opacity: 0.7;
+	color: #FFF;
+	font-size: 18px;
+	width: 100%;
+}
+.area:hover {
+	opacity: 0.9;
+}
+.area .content {
+	position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-50%);
+}
+.column {
+    height: 100%;
+    text-align: center;
+	float:left;
+}
+
+
+#chart.scheme2 .area:nth-child(5n+1) {
+	background: rgba(52, 96, 173, 1);
+}
+#chart.scheme2 .area:nth-child(5n+1):hover {
+	background: rgba(52, 96, 173, 1);
+}
+
+#chart.scheme2 .area:nth-child(5n+2) {
+	background: rgba(125, 171, 255, 1);
+}
+#chart.scheme2 .area:nth-child(5n+2):hover {
+	background: rgba(125, 171, 255, 1);
+}
+
+#chart.scheme2 .area:nth-child(5n+3) {
+	background: rgba(99, 154, 255, 1);
+}
+#chart.scheme2 .area:nth-child(5n+3):hover {
+	background: rgba(99, 154, 255, 1);
+}
+
+#chart.scheme2 .area:nth-child(5n+4) {
+	background: rgba(178, 133, 34, 1);
+}
+#chart.scheme2 .area:nth-child(5n+4):hover {
+	background: rgba(178, 133, 34, 1);
+}
+
+#chart.scheme2 .area:nth-child(5n) {
+	background: rgba(255, 197, 73, 1);
+}
+#chart.scheme2 .area:nth-child(5n):hover {
+	background: rgba(255, 197, 73, 1);
+}
+#chart.scheme1 .area:nth-child(5n+1) {
+	background: rgba(101, 15, 127, 1);
+}
+#chart.scheme1 .area:nth-child(5n+1):hover {
+	background: rgba(101, 15, 127, 1);
+}
+
+#chart.scheme1 .area:nth-child(5n+2) {
+	background: rgba(220, 106, 255, 1);
+}
+#chart.scheme1 .area:nth-child(5n+2):hover {
+	background: rgba(220, 106, 255, 1);
+}
+
+#chart.scheme1 .area:nth-child(5n+3) {
+	background: rgba(202, 29, 255, 1);
+}
+#chart.scheme1 .area:nth-child(5n+3):hover {
+	background: rgba(202, 29, 255, 1);
+}
+
+#chart.scheme1 .area:nth-child(5n+4) {
+	background: rgba(110, 53, 127, 1);
+}
+#chart.scheme1 .area:nth-child(5n+4):hover {
+	background: rgba(110, 53, 127, 1);
+}
+
+#chart.scheme1 .area:nth-child(5n) {
+	background: rgba(162, 23, 204, 1);
+}
+#chart.scheme1 .area:nth-child(5n):hover {
+	background: rgba(162, 23, 204, 1);
+}

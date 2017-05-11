@@ -1,0 +1,288 @@
+<!doctype html>
+<html>
+<head>
+	<title>Mekko Chart </title>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1.0, maximum-scale=1.0">
+	<link rel="stylesheet" href="static/css/upload.css" />
+	<link rel="stylesheet" href="static/css/font-awesome.css" />
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+	<script src="static/papaparse.min.js"></script>
+	<link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700" rel="stylesheet">
+</head>
+<body>
+<div class="main">
+	<h1 style="padding-left: 50px; display: none;">Mekko Chart</h1>
+	<div id="options">
+
+		<div class="uploadbox" id="filedrag" style="">
+			<div class="progress" id="progress"></div>
+			<div id="dropscreen" class="dropscreen screen active">
+				<div class="icon"><i class="fa fa-cloud-upload" aria-hidden="true"></i></div>
+				<span class="label">Drop CSV here</span>
+			</div>
+			<div id="uploadscreen" class="finishscreen screen">
+				<span class="label">Uploading <span id="status"></span></span>
+			</div>
+			<div id="donescreen" class="donescreen screen">
+				<div class="columns">
+					<div id="x" class="column">
+						<h3>X-Column</h3>
+						<ul></ul>
+					</div>
+					<div id="y" class="column">
+						<h3>Y-Column</h3>
+						<ul></ul>
+					</div>
+					<div id="v" class="column">
+						<h3>Value Column</h3>
+						<ul></ul>
+					</div>
+				</div>
+				<div style="clear:both;"></div>
+				<div id="donebutton" class="donebutton">Done</div>
+			</div>
+			<div id="finishscreen" class="finishscreen screen">
+				<span class="label">Completed</span>
+			</div>
+		</div>
+		<div class="select">
+			<h3>X Column</h3>
+			<select>
+			<option>Test</option>
+			</select>
+		</div>
+		<div class="select">
+			<h3>Y Column</h3>
+			<select>
+			<option>Test</option>
+			</select>
+		</div>
+		<div class="select">
+			<h3>Value Column</h3>
+			<select>
+			<option>Test</option>
+			</select>
+		</div>
+	</div>
+	<div class="chartbox">
+	<div id="chart" class="scheme2">
+		<div id="tiles"></div>
+		<ul id="vticks" class="ticks">
+			<li>100</li>
+			<li>75</li>
+			<li>50</li>
+			<li>25</li>
+			<li></li>
+		</ul>
+		<ul id="hticks" class="ticks">
+			<li>0</li>
+			<li>25</li>
+			<li>50</li>
+			<li>75</li>
+			<li>100</li>
+		</ul>
+		<ul id="labels" class="ticks">
+			
+		</ul>
+	</div>
+	</div>
+</div>
+<script>
+	var ws;
+	var total;
+var server_url = "ws://138.68.101.51:15000/conn"
+var get_url = "ws://138.68.101.51:15000/get"
+var width = 800;
+var height = 500; 
+function drawChart(data) {		
+	var chart = $("#chart");
+	
+	var tiles = $("#tiles");
+	tiles.css("width", (width-50)+"px");
+	tiles.css("height", (height-50)+"px");
+	
+	var hticks = $("#hticks");
+	hticks.css("width", (width-50)+"px");
+
+	var vticks = $("#vticks");
+	vticks.css("height", (height-100)+"px");
+	
+	var labels = $("#labels");
+	labels.css("width", (width-50)+"px");
+	
+	for (var customer in data) {
+		if (customer!='Total') {
+			var column = $("<div class='column'></div>");
+			var columnWidth = data[customer]['Total']/data['Total']*100;
+			column.css("width", columnWidth + "%");
+			for (var region in data[customer]) {
+				if (region!='Total') {
+					var div = $("<div class='area'><div class='content'>"+region+"</div></div>");
+					
+					var divHeight = data[customer][region]/data[customer]['Total']*100;
+					div.css("height", divHeight+"%");
+					column.append(div);
+				}
+			}
+			tiles.append(column);
+			
+			var label = $("<li>"+customer+"</li>");
+			label.css("width", columnWidth + "%");
+			labels.append(label);
+		}
+	}
+}
+
+
+var rownum=0;
+
+function sendData(data) {
+	if (ws.readyState != WebSocket.OPEN) {
+		return false;
+	}	
+	data = JSON.stringify(data);
+	ws.send(data);	
+	return true;
+}	
+
+function openWS() {
+	ws = new WebSocket(server_url);
+	ws.onmessage = function(e) {
+		var data = JSON.parse(e.data);
+		
+		if (data['type'] == "cols") {
+			$(".screen.active").removeClass('active');
+			$("#donescreen").addClass('active');
+			for (var type in data['cols']) {
+				let $ul = $("#"+type+" ul");
+				for (var col in data['cols'][type]) {
+					let val = data['cols'][type][col]
+					let $li = $("<li data-value='"+val+"'>"+val+"</li>");
+					$li.on("click", function() {
+						if (!$(this).hasClass('disabled')) {
+							var type = $(this).parent().parent().attr('id');
+							var value = $(this).data('value');
+							if (type=='x') {
+								$("#y ul li.disabled").removeClass('disabled');
+								$("#y ul li[data-value='"+value+"']").addClass('disabled')
+							}
+							if (type=='y') {
+								$("#x ul li.disabled").removeClass('disabled');
+								$("#x ul li[data-value='"+value+"']").addClass('disabled')
+							}
+							$ul.find("li.selected").removeClass('selected');
+							$(this).addClass('selected');
+						}
+					});
+					$ul.append($li);
+				}
+			}
+			var $yul = $("#ycolumn ul");
+			var $vul = $("#vcolumn ul");
+			
+		}
+		
+		if (data['type'] == 'progress') {
+			var progress = data['progress']*1;
+			var percentage = progress/total*100
+			$("#status").html(progress+"/"+total);
+			$("#progress").css("width", percentage+"%");
+		}
+		
+		if (data['type'] == 'finish') {
+			//$(".screen.active").removeClass('active');
+			//$("#finishscreen").addClass('active');
+			$.get("/get")
+		}
+
+	};
+	ws.onopen = function (e) {
+		Init();
+	};
+	ws.onclose = function(e) {
+	};
+}
+
+function Init() {
+
+		
+	var $drag = $("#filedrag");
+	
+	$('#donebutton').on('click', function () {
+		var x = $("#x ul li.selected").data('value');
+		var y = $("#y ul li.selected").data('value');
+		var v = $("#v ul li.selected").data('value');
+		
+		sendData({'type': 'cols', 'cols': {'x': x, 'y': y, 'v': v}});
+	})
+	
+	// file select
+	//fileselect.addEventListener("change", FileSelectHandler, false);
+			
+			$drag
+			.addClass( 'has-advanced-upload' ) 
+			.on( 'drag dragstart dragend dragover dragenter dragleave drop', function( e )
+			{
+				// preventing the unwanted behaviours
+				e.preventDefault();
+				e.stopPropagation();
+			})
+			.on( 'dragover dragenter', function() //
+			{
+				$drag.addClass( 'hover' );
+			})
+			.on( 'dragleave dragend drop', function()
+			{
+				$drag.removeClass( 'hover' );
+			})
+			.on( 'drop', function( e )
+			{
+				var files = e.originalEvent.target.files || e.originalEvent.dataTransfer.files;
+				var file = files[0];
+				total = Math.ceil(file.size/Papa.LocalChunkSize);
+				
+				$("#status").html("0/"+total);
+				
+				Papa.parse(file, {
+					skipEmptyLines: true,
+					beforeFirstChunk: function (chunk) {
+						
+						$(".screen.active").removeClass('active');
+						$("#filedrag").addClass('start');
+						$("#uploadscreen").addClass('active');
+						
+						var lines = chunk.split('\n');
+						
+						var cols = lines[0];
+						sendData({'type': 'start', 'cols': cols, 'total': total});
+						
+						lines.splice(0, 1);
+						return lines.join('\n');
+					},
+					chunk: function(results) {
+						sendData({'type':'rows', 'rows': results.data});
+					}, 
+					complete: function() {
+						//sendData({'type':'finish', 'rownum': rownum})
+					}
+				});
+			});
+
+}
+
+window.onload = function() {
+
+	Papa.LocalChunkSize = 10024;
+	// initialize
+
+	drawChart({'Total': 1300, 'Retail': {'Total': 600, 'Sweden': 100, 'EU': 200, 'International': 300}, 'Corporate': {'Total': 700, 'Sweden': 400, 'EU': 100, 'International': 200}});
+
+	// call initialization file
+	if (window.File && window.FileList && window.FileReader) {
+		openWS();
+	}
+}
+</script>
+</body>
+</html>

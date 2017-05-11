@@ -1,0 +1,997 @@
+<!doctype html>
+<html>
+<head>
+	<title>Mekko Chart </title>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1.0, maximum-scale=1.0">
+	<link rel="stylesheet" href="static/css/upload.css" />
+	<link rel="stylesheet" href="static/css/font-awesome.css" />
+	<link rel="stylesheet" href="static/css/jquery-ui.css" />
+	<script src="static/js/jquery.js"></script>
+	<script src="static/js/jquery-ui.js"></script>
+	<script src="static/js/papaparse.min.js"></script>
+	<link href="static/css/font.css" rel="stylesheet">
+	<link rel="shortcut icon" href="{{ static_url('favicon.ico') }}">
+</head>
+<body>
+<div class="main">
+	<h1 style="padding-left: 50px; display: none;">Mekko Chart</h1>
+	<div id="options">
+		<div class="uploadbox" id="filedrag" style="">
+			<div id="dropscreen" class="dropscreen screen active">
+				<div class="icon">
+					<input type="file" id="fileupload"></input>
+					<i class="fa fa-cloud-upload" aria-hidden="true"></i>
+				</div>
+				<span class="label" id="filename">Drop CSV here</span>
+			</div>
+			<div id="uploadscreen" class="finishscreen screen">
+				<span class="label">Uploading <span id="status"></span></span>
+				<div class="progressbox"><div class="progress" id="progress"></div></div>
+			</div>
+		</div>
+		<div class="select" id="column1">
+			<h3>X Column</h3>
+			<select id="x">
+			<option value=0>Test</option>
+			<option value=1>Test2</option>
+			</select>
+		</div>
+		<div class="select" id="column2">
+			<h3>Y Column</h3>
+			<select id="y">
+			<option>Test</option>
+			</select>
+		</div>
+		<div class="select" id="column3">
+			<h3>Value Column</h3>
+			<select id="v">
+			<option>Test</option>
+			</select>
+		</div>
+		<div class="select" id="column4" style="display: none;">
+			<h3>Value Column</h3>
+			<select id="x_1">
+			<option>Test</option>
+			</select>
+		</div>
+		<div class="select" id="column5" style="display: none;">
+			<h3>Value Column</h3>
+			<select id="y_1">
+			<option>Test</option>
+			</select>
+		</div>
+		<div id="donebutton" class="donebutton button">Save</div>
+	</div>
+	<div class="chartbox">
+		<div id="chart" class="scheme2">
+			<div id="tiles"></div>
+			<div class="footer" style="display: none;">
+				<h3 id="footer_1"></h3>
+				<h3 id="footer_2"></h3>
+			</div>
+			<div class="to_ex">
+				<h2>Total Explosure Amount is : </h2>
+				<h2 id="num_ex"></h2>
+				<h2>.</h2>
+			</div>
+			<ul id="vticks" class="ticks">
+				<li>100</li>
+				<li>75</li>
+				<li>50</li>
+				<li>25</li>
+				<li></li>
+			</ul>
+			<ul id="hticks" class="ticks">
+				<li>0</li>
+				<li>25</li>
+				<li>50</li>
+				<li>75</li>
+				<li>100</li>
+			</ul>
+			<ul id="labels" class="ticks">
+				
+			</ul>
+			<ul id="vlabels" class="ticks">
+			
+			</ul>
+			<ul id="lbs_side" class="ticks">
+			
+			</ul>
+			<ul id="lbs_footer" class="ticks">
+			
+			</ul>
+		</div>
+	</div>
+</div>
+<div class="box">
+  <span class="close"></span>
+  <div class="chartbox_1">
+		<div id="chart_1" class="scheme2_1">
+			<div id="tiles_1"></div>
+			<div class="to_ex_1" style="display: none;">
+				<h2>Total Explosure Amount is : </h2>
+				<h2 id="num_ex_1"></h2>
+				<h2>.</h2>
+			</div>
+			<div class="footer_1" style="display: none;">
+				<h3 id="footer_1_1"></h3>
+				<h3 id="footer_2_1"></h3>
+			</div>
+			<ul id="vticks_1" class="ticks_1">
+				<li>100</li>
+				<li>75</li>
+				<li>50</li>
+				<li>25</li>
+				<li></li>
+			</ul>
+			<ul id="hticks_1" class="ticks_1">
+				<li>0</li>
+				<li>25</li>
+				<li>50</li>
+				<li>75</li>
+				<li>100</li>
+			</ul>
+			<ul id="labels_1" class="ticks_1">
+				
+			</ul>
+			<ul id="vlabels_1" class="ticks_1">
+			
+			</ul>
+			<ul id="lbs_sd_p" class="ticks">
+			
+			</ul>
+			<ul id="lbs_ftr_p" class="ticks">
+			
+			</ul>
+		</div>
+	</div>
+</div>
+</body>
+</html>
+<script>
+	var data =  {% raw data %};
+	var cols =  {% raw cols %};
+	var ws;
+	var total;
+	var server_url = "ws://138.68.101.51:11000/conn"
+	var cols_url = "http://138.68.101.51:11000/cols"
+	var ajax_url = "http://138.68.101.51:11000/ajax"
+	var width = 800;
+	var height = 500; 
+	var rownum=0;
+	var x = 0,
+		y = 1,
+		v = 0;
+	var text;
+	function drawChart(data) {	
+
+		var chart = $("#chart");
+		
+		var tiles = $("#tiles");
+		tiles.html('');
+		tiles.css("width", (width-50)+"px");
+		tiles.css("height", (height-50)+"px");
+		
+		var hticks = $("#hticks");
+		hticks.css("width", (width-50)+"px");
+
+		var vticks = $("#vticks");
+		vticks.css("height", (height-50)+"px");
+		
+		var labels = $("#labels");
+		labels.html('');
+		labels.css("width", (width-50)+"px");
+		
+		var vlabels = $("#vlabels");
+		vlabels.html('');
+		vlabels.css("height", (height-50)+"px");
+		
+		var lbs_side = $("#lbs_side");
+		lbs_side.html('');
+		lbs_side.css("height", (height-50)+"px");
+		
+		var lbs_footer = $("#lbs_footer");
+		lbs_footer.html('');
+		lbs_footer.css("width", (width-50)+"px");
+
+		for (var customer in data['data']) {
+			if (customer!='Total') {
+				var column = $("<div class='column'></div>");
+				var columnWidth = data['data'][customer]['Total']/data['data']['Total']*100;
+				column.css("width", columnWidth + "%");
+				for (var region in data['data'][customer]) {
+					if (region!='Total') {
+						var divHeight = data['data'][customer][region]/data['data'][customer]['Total']*100;
+						var div = $("<div class='area'><div class='content'>"+parseInt(divHeight)+"%</div></div>");
+						var hidden_ctm = $("<input type='hidden' class='ctm'>"+customer);
+						var hidden_reg = $("<input type='hidden' class='reg'>"+region);
+						div.css("height", divHeight+"%");
+
+						column.append(div);
+						column.append(hidden_ctm);
+						column.append(hidden_reg);
+
+						if (customer == "Financial institutions"){
+							div.attr("id", "Financial_" + region);
+						}else{
+							div.attr("id", customer+"_"+region);
+						}
+					}
+				}
+				tiles.append(column);
+				
+				var label = $("<li>"+customer+"</li>");
+				label.css("width", columnWidth + "%");
+				labels.append(label);
+			}
+		}
+
+		$(".area").hover(function() {
+			footer_text_mix = this.id;
+
+			var res = footer_text_mix.split("_");
+			region_type_txt = res[1];
+			ctm_type_txt = res[0];
+
+			$(".footer").css('display', '');
+			$(".footer #footer_1").html(region_type_txt+" * "+ctm_type_txt+" : ");
+		}, function(){
+			$(".footer").css('display', 'none');
+		}).click(sectionClickHandler);
+
+		var region_sum = [];
+		for (var regions in data['data']) {
+			if (regions == 'Total') {
+				continue;
+			}
+			for (var region in data['data'][regions]) {
+				if (region == 'Total') {
+					continue;
+				}
+				
+				if (!region_sum[region]) {
+					region_sum[region] = 0;
+				}
+				region_sum[region] += data['data'][regions][region];
+			}
+		}
+
+		if ( $('#x').val() != $('#y').val() ){
+			for (var reg_nm in region_sum) {
+				var divHeight = region_sum[reg_nm] / data['data']['Total'] * 100;
+				var label = $("<li><div class='content'>"+reg_nm+"</div></li>");
+				label.css("height", divHeight+"%");
+				vlabels.append(label);
+			}
+		}
+		var ft_html = $('#x option:selected').text();
+		var sd_html = $('#y option:selected').text();
+
+		var ft_lb = $("<li><div class='content'>"+ft_html+"</div></li>");
+		lbs_footer.append(ft_lb);
+		if ( $('#x').val() != $('#y').val() ){
+			var sd_lb = $("<li><div class='content'>"+sd_html+"</div></li>");
+			lbs_side.append(sd_lb);
+		}
+		$('#num_ex').html(data['data']['Total']);
+		// going throug last customer
+		/*for (var region in data[customer]) {
+			if (region!='Total') {
+
+				var divHeight = data[customer][region]/data[customer]['Total']*100;
+				var label = $("<li><div class='content'>"+region+"</div></li>");
+				label.css("height", divHeight+"%");
+				vlabels.append(label);
+			}
+		}*/
+	}
+
+
+
+	function updateProgress(progress, total) {
+		$("#status").html(progress+"/"+total);
+		var percentage = progress/total*100
+		$("#progress").css("width", percentage+"%");
+	}
+
+	function updateCols(data) {
+		
+		$("#filename").html(data['f']);
+		
+		cols = {}
+		cols['x'] = data['xs']
+		cols['y'] = data['ys']
+		cols['v'] = data['vs']
+		
+		for (var type in cols) {
+			var selected = data[type];
+			
+			let $sel = $("#"+type);
+			$sel.empty();
+			
+			for (var col in cols[type]) {
+				let val = cols[type][col]
+				let $opt = $("<option value='"+col+"'>"+val+"</option>");
+				$sel.append($opt);
+			}
+			
+			$sel.on("change", function() {
+				return;
+				var value = $(this).val();
+				var type = $(this).attr('id');
+				
+				if (type=='x') {
+					$("#y option[disabled]").removeAttr('disabled');
+					$("#y option[value="+value+"]").attr('disabled', 'disabled');
+				}
+				if (type=='y') {
+					$("#x option[disabled]").removeAttr('disabled');
+					$("#x option[value="+value+"]").attr('disabled', 'disabled');
+				}
+			});
+			
+			$sel.find("option[value='"+selected+"']").attr('selected', 'selected');
+			
+		}
+	}
+
+	function sendData(data) {
+		if (ws.readyState != WebSocket.OPEN) {
+			console.log('sending error');
+			return false;
+		}	
+		// console.log(data);
+		data = JSON.stringify(data);
+		ws.send(data);	
+		return true;
+	}	
+
+	function openWS(file) {
+		ws = new WebSocket(server_url);
+		ws.onmessage = function(e) {
+			var data = JSON.parse(e.data);
+
+			if (data['type'] == "cols") {
+				updateCols(data['cols']);
+				drawChart(data['data']);
+				$(".screen.active").removeClass('active');
+				$("#dropscreen").addClass('active');
+			}
+			
+			if (data['type'] == 'progress') {
+				updateProgress(data['progress']*1,total);
+			}
+
+		};
+		ws.onopen = function (e) {
+			total = Math.ceil(file.size/Papa.LocalChunkSize);
+					
+			updateProgress(0, total);
+			
+			var firstchunk = true;
+			
+			Papa.parse(file, {
+				skipEmptyLines: true,
+				beforeFirstChunk: function (chunk) {
+					
+					$(".screen.active").removeClass('active');
+					//$("#filedrag").addClass('start');
+					$("#uploadscreen").addClass('active');
+					
+					return chunk;
+				},
+				chunk: function(results) {
+					if (firstchunk) {
+						var cols = results.data.shift();					
+						var rows = results.data;
+						sendData({type: 'start', cols: cols, total: total, filename: file.name,	rows: rows});
+						
+						firstchunk = false;
+					} else {
+						sendData({type: 'rows', rows: results.data});
+					}
+				}
+			});
+		};
+		ws.onclose = function(e) {
+		};
+	}
+
+	var sectionClickHandler = function () {
+			$('.box').addClass('open');
+			$('.box').css('backgroundColor', '#fffaef')
+			//alert(this.id);
+		
+			$('.close').click(function() {
+				$('.box').removeClass('open');
+				$('.box').css('backgroundColor', 'transparent');
+				$('.to_ex').css('display', 'block');
+				$('#vlabels_1').children().remove();
+			});
+
+			var kids =  {% raw cols %};
+			var type_x = kids["xs"][kids["x"]];
+			var type_y = kids["ys"][kids["y"]];
+
+			text = this.id;
+			var res = text.split("_");
+			region_type_txt = res[1];
+			ctm_type_txt = res[0];
+
+			if (ctm_type_txt == "Financial"){
+				ctm_type_txt = "Financial institutions"
+			}
+
+			for (var i in kids['customer_type']){
+				if (kids['customer_type'][i] == ctm_type_txt){
+					var ctm_type = i;
+				}
+			}
+
+			for (var i in kids['region']){
+				if (kids['region'][i] == region_type_txt){
+					var region_type = i;
+				}
+			}
+
+			var bgclr = $(this).css("background-color");
+			
+			$.get(ajax_url, {x: x, y: y, v: v, region_type, ctm_type}, function(data) {
+				data_ajax = JSON.parse(data);
+				real_data = data_ajax['data'];
+
+				var z_arr_amt = 0,
+					n_z_arr_amt = 0,
+					z_arr = [],
+					n_z_arr = [];
+
+				for (arr in real_data){
+					if(real_data[arr][2] == 0){
+						z_arr.push(real_data[arr]);
+						z_arr_amt += real_data[arr][real_data[arr].length - 1]; 
+					}else{
+						n_z_arr.push(real_data[arr]);
+						n_z_arr_amt += real_data[arr][real_data[arr].length - 1];
+					}
+				}
+
+				net_amt = z_arr_amt + n_z_arr_amt;
+
+				$("#tiles_1").html("");
+
+				if(n_z_arr_amt != ""){
+					if(z_arr_amt != ""){
+						var z_hght = z_arr_amt / net_amt * 100;
+						var z_tag = $("<div class='zero'></div>");
+						z_tag.css("height", z_hght + "%");
+						z_tag.css("background-color", "yellow");
+						$("#tiles_1").append(z_tag)
+					}
+
+					var n_z_hght = n_z_arr_amt / net_amt * 100;
+					var n_z_tag = $("<div class='non_zero'></div>");
+					n_z_tag.css("height", n_z_hght + "%");
+					$("#tiles_1").append(n_z_tag);
+
+					var label_tick_1 = [];
+
+
+					for(var section in n_z_arr){
+						divWidth = (n_z_arr[section][n_z_arr[section].length - 1] / n_z_arr_amt) * 100;
+						var div = $("<div class='individual'><div class='indi_content'>"+parseInt(divWidth)+"%</div></div>");
+
+						label_tick_1.push(n_z_arr[section][3]);
+
+						div.css("width", divWidth+"%");
+						div.css("float", 'left');
+						div.css("height", '100%');
+						div.css("background-color", bgclr);
+						n_z_tag.append(div);
+					}
+				}
+
+//..............POP UP side & footer Axis
+
+				var labels_1 = $("#labels_1");
+
+				$("#labels_1").children().hide();
+
+				for( i in label_tick_1){
+					var label_sel_1 = $("<li>"+i+"</li>");
+					label_sel_1.css("width", (divWidth-1) + "%");
+					labels_1.append(label_sel_1);
+				}
+
+				var vlabels_1 = $("#vlabels_1");
+
+				var cltls = [];
+				for(cltl in real_data){
+					if (cltls.indexOf(real_data[cltl][2]) == -1) {
+						cltls.push(real_data[cltl][2]);
+					}					
+				}
+
+				var p_sd_rate = [z_hght, n_z_hght];
+
+				for (var p in cltls) {
+					var p_sd_height = p_sd_rate[p];
+					var p_sd_lb = $("<li><div class='content'>"+p+"</div></li>");
+					p_sd_lb.css("height", p_sd_height + "%");
+					vlabels_1.append(p_sd_lb);
+				}
+//..............Collateral & Collateral_type Axis
+
+				var lbs_sd_p = $("#lbs_sd_p");
+				lbs_sd_p.html('');
+				lbs_sd_p.css("height", (height-50)+"px");
+				
+				var lbs_ftr_p = $("#lbs_ftr_p");
+				lbs_ftr_p.html('');
+				lbs_ftr_p.css("width", (width-50)+"px");
+
+				var ftr_p = $("<li><div class='content'>Collateral_type</div></li>");
+				lbs_ftr_p.append(ftr_p);
+
+				var sd_p = $("<li><div class='content'>Collateral</div></li>");
+				lbs_sd_p.append(sd_p);
+
+				$(".to_ex_1").css('display', '');
+
+				$("#num_ex_1").text(net_amt);
+
+				$(".to_ex").css('display', 'none');
+//..................................................
+			});
+			/*var kids =  {% raw cols %};
+
+			cols = {};
+			cols['x_1'] = kids['region'];
+			cols['y_1'] = kids['customer_type'];
+
+			for (var type in cols) {
+				let $sel = $("#"+type);
+				$sel.empty();
+
+				for (var col in cols[type]) {
+					let val = cols[type][col]
+					let $opt = $("<option value='"+col+"'>"+val+"</option>");
+					$sel.append($opt);
+				}
+			}
+
+			var type_x = kids["xs"][kids["x"]];
+			var type_y = kids["ys"][kids["y"]];
+
+			$("#column4 h3").html(type_y);
+			$("#column4").css("display", "block");
+			$("#column5 h3").html(type_x);
+			$("#column5").css("display", "block");
+
+			$("#column1").hide();
+			$("#column2").hide();
+			$("#column3").hide();
+
+			$("#x").attr('id', 'crl');
+			$("#y").attr('id', 'crl_type');
+
+			var button = $("<div class='donebutton button' id='goBack'>Go Back</div>");
+		
+			if($("#goBack").length == 0){
+				$("#donebutton").before(button);
+			}
+
+			$("#donebutton").hide();
+
+			var ajaxBtn = $("<button type='button' id='sendAjax'>Click Me!</button>");
+
+			if($("#sendAjax").length == 0){
+				$("#goBack").before(ajaxBtn);
+			}
+
+			$('#goBack').on('click', function () {
+				window.location.href = "http://localhost";
+			});
+
+			text = this.id;
+			console.log(text);
+			var res = text.split("_");
+			region_type_txt = res[1];
+			ctm_type_txt = res[0];
+
+			if (ctm_type_txt == "Financial"){
+				ctm_type_txt = "Financial institutions"
+			}
+
+			//console.log(kids);
+
+			for (var i in kids['customer_type']){
+				if (kids['customer_type'][i] == ctm_type_txt){
+					var ctm_type = i;
+				}
+			}
+
+			for (var i in kids['region']){
+				if (kids['region'][i] == region_type_txt){
+					var region_type = i;
+				}
+			}
+
+
+			$("#x_1").val(region_type);
+			$("#y_1").val(ctm_type);*/
+		};
+
+	function sectionClick()
+	{
+		var chart_1 = $("#chart_1");
+		
+		var tiles_1 = $("#tiles_1");
+		tiles_1.html('');
+		tiles_1.css("width", (width-50)+"px");
+		tiles_1.css("height", (height-50)+"px");
+		
+		var hticks_1 = $("#hticks_1");
+		hticks_1.css("width", (width-50)+"px");
+
+		var vticks_1 = $("#vticks_1");
+		vticks_1.css("height", (height-50)+"px");
+		
+		var labels_1 = $("#labels_1");
+		labels_1.html('');
+		labels_1.css("width", (width-50)+"px");
+		
+		var vlabels_1 = $("#vlabels_1");
+		vlabels_1.html('');
+		vlabels_1.css("height", (height-50)+"px");
+
+		// $('.area').on('click', sectionClickHandler);
+	}
+
+	/*function sectionClick(){
+
+		$('.area').on('click', function () {
+			$(this).parent().siblings().hide();
+			$(this).siblings().hide();
+			$(this).children().remove();
+			
+
+			var kids =  {% raw cols %};
+			cols = {};
+			cols['x_1'] = kids['region'];
+			cols['y_1'] = kids['customer_type'];
+
+			for (var type in cols) {
+				let $sel = $("#"+type);
+				$sel.empty();
+
+				for (var col in cols[type]) {
+					let val = cols[type][col]
+					let $opt = $("<option value='"+col+"'>"+val+"</option>");
+					$sel.append($opt);
+				}
+			}
+
+			var type_x = kids["xs"][kids["x"]];
+			var type_y = kids["ys"][kids["y"]];
+
+			$("#column4 h3").html(type_y);
+			$("#column4").css("display", "block");
+			$("#column5 h3").html(type_x);
+			$("#column5").css("display", "block");
+
+			$("#column1").hide();
+			$("#column2").hide();
+			$("#column3").hide();
+			
+			$("#x").attr('id', 'crl');
+			$("#y").attr('id', 'crl_type');
+
+			var button = $("<div class='donebutton button' id='goBack'>Go Back</div>");
+			
+			if($("#goBack").length == 0){
+				$("#donebutton").before(button);
+			}
+			$("#donebutton").hide();
+
+			var ajaxBtn = $("<button type='button' id='sendAjax'>Click Me!</button>");
+
+			if($("#sendAjax").length == 0){
+				$("#goBack").before(ajaxBtn);
+			}
+
+			$('#goBack').on('click', function () {
+				window.location.href = "http://localhost";
+			})
+
+			$(this).parent().animate({
+				width : "100%"
+			}, {duration : 1000, easing : "linear"});
+			$(this).animate({
+				height : "100%"
+				}, {
+				duration : 1000, easing : "linear", 
+				complete : function(){
+					//
+				}
+			});
+
+			text = this.id;
+			var res = text.split("_");
+			region_type_txt = res[1];
+			ctm_type_txt = res[0];
+
+			if (ctm_type_txt == "Financial"){
+				ctm_type_txt = "Financial institutions"
+			}
+
+			for (var i in kids['customer_type']){
+				if (kids['customer_type'][i] == ctm_type_txt){
+					var ctm_type = i;
+				}
+			}
+
+			for (var i in kids['region']){
+				if (kids['region'][i] == region_type_txt){
+					var region_type = i;
+				}
+			}
+
+
+			$("#x_1").val(region_type);
+			$("#y_1").val(ctm_type);
+
+			$.get(ajax_url, {x: x, y: y, v: v, region_type, ctm_type}, function(data) {
+				data_ajax = JSON.parse(data);
+			});
+
+			data_details = data["details"];
+
+			///////////////////////////////////////////////////////////////
+			
+			var labels = $("#labels");
+			labels.html('');
+			labels.css("width", (width-50)+"px");
+
+			//var label = $("<li>"+customer+"</li>");
+			///label.css("width", columnWidth + "%");
+			//labels.append(label);
+
+			var zero_arr = [],
+				non_zero_arry = [],
+				zero_amt = 0,
+				non_zero_amt = 0;
+			data_details.map(function(a){
+				if(a[2] == 0){
+					zero_arr.push(a);
+					zero_amt += a[a.length - 1];
+				} else {
+					non_zero_arry.push(a);
+					non_zero_amt += a[a.length - 1];
+				}
+			});
+			
+			var label_note = [];
+			
+			non_zero_arry.map(function(b){
+				label_note.push(b[3]);
+			});
+
+			total_amt = zero_amt + non_zero_amt;
+			if(non_zero_amt != ""){
+				if(zero_amt != ""){
+					var z_hght = zero_amt / total_amt * 100;
+					var z_tag = $("<div class='zero'></div>");
+					z_tag.css("height", z_hght + "%");
+					z_tag.css("background-color", "yellow");
+					$(this).append(z_tag)
+				}
+
+				var n_z_hght = non_zero_amt / total_amt * 100;
+				var n_z_tag = $("<div class='non_zero'></div>");
+				n_z_tag.css("height", n_z_hght + "%");
+				$(this).append(n_z_tag)
+
+				for(var section in non_zero_arry){
+					divWidth = (non_zero_arry[section][non_zero_arry[section].length - 1] / non_zero_amt) * 100;
+					var div = $("<div class='individual'>"+parseInt(divWidth)+"%</div>");
+					div.css("width", divWidth+"%");
+					div.css("float", 'left');
+					div.css("height", '100%');
+					n_z_tag.append(div);
+				}
+			}
+
+			$("#hticks").hide();
+
+			for( i in label_note){
+				var label = $("<li>"+i+"</li>");
+				label.css("width", (divWidth-1.5) + "%");
+				labels.append(label);
+			}
+			$(".to_ex").css("display", "");
+			$("#num_ex").text(total_amt);
+		});
+	sendAjax();
+	}*/
+
+	function sendAjax() {
+		
+		$(document).on("click","#sendAjax",function() {
+			region_type = $("#x_1").val();
+			ctm_type = $("#y_1").val();
+
+			region_txt = $("#x_1 option:selected").text();
+			ctm_txt = $("#y_1 option:selected").text();
+
+			if(ctm_txt == "Financial institutions"){
+				ctm_txt = "Financial";
+			}
+
+
+			id = "#"+ctm_txt+"_"+region_txt;
+			
+			pointed_id = "#" + text;
+
+			$.get(ajax_url, {x: x, y: y, v: v, region_type, ctm_type}, function(data) {
+
+				data_ajax = JSON.parse(data);
+				real_data = data_ajax['data'];
+
+				var z_arr_amt = 0,
+					n_z_arr_amt = 0,
+					z_arr = [],
+					n_z_arr = [];
+
+				for (arr in real_data){
+					if(real_data[arr][2] == 0){
+						z_arr.push(real_data[arr]);
+						z_arr_amt += real_data[arr][real_data[arr].length - 1]; 
+					}else{
+						n_z_arr.push(real_data[arr]);
+						n_z_arr_amt += real_data[arr][real_data[arr].length - 1];
+					}
+				}
+
+				net_amt = z_arr_amt + n_z_arr_amt;
+
+				if(n_z_arr_amt != ""){
+					if(z_arr_amt != ""){
+						var z_hght = z_arr_amt / net_amt * 100;
+						var z_tag = $("<div class='zero'></div>");
+						z_tag.css("height", z_hght + "%");
+						z_tag.css("background-color", "yellow");
+						$(id).append(z_tag);
+					}
+
+					var n_z_hght = n_z_arr_amt / net_amt * 100;
+					var n_z_tag = $("<div class='non_zero'></div>");
+					n_z_tag.css("height", n_z_hght + "%");
+					$(id).append(n_z_tag);
+
+					var label_tick = [];
+
+					for(var section in n_z_arr){
+						divWidth = (n_z_arr[section][n_z_arr[section].length - 1] / n_z_arr_amt) * 100;
+						var div = $("<div class='individual'>"+parseInt(divWidth)+"%</div>");
+
+						label_tick.push(n_z_arr[section][3]);
+
+						div.css("width", divWidth+"%");
+						div.css("float", 'left');
+						div.css("height", '100%');
+						n_z_tag.append(div);
+					}
+				}
+				$(".area").css("display", "none");
+
+				$(id).css("display", "");
+
+				$(id).siblings().css("display", "none");
+				$(id).parent().css("display", "");
+				$(id).parent().animate({
+					width : "100%",
+				}, {duration : 1000, easing : "linear"});
+				$(id).parent().height("100%");
+				$(id).parent().siblings().css("display", "none");
+				$(id).animate({
+					width : "100%",
+				}, {duration : 1000, easing : "linear"});
+				$(id).height("100%");				
+
+				var labels = $("#labels");
+				$("#labels").children().hide();
+				for( i in label_tick){
+					var label_sel = $("<li>"+i+"</li>");
+					label_sel.css("width", (divWidth-1) + "%");
+					labels.append(label_sel);
+				}
+
+				
+				$("#num_ex").text(net_amt);
+
+			});			
+		});
+	}
+
+	function Init() {
+
+		$("#x").change(function() {
+			x = $(this).val();
+		});
+
+		$("#y").change(function() {
+			y = $(this).val();
+		});
+
+		$("#v").change(function() {
+			v = $(this).val();
+		});
+				
+		$('#donebutton').on('click', function () {
+			$.get(cols_url, {x: x, y: y, v: v}, function(data) {
+				data = JSON.parse(data);
+				
+				if (data['success']) {
+					drawChart(data['data']);
+					//sectionClick();
+				}
+			});
+		});
+
+
+		sectionClick();
+		var $drag = $("#filedrag");
+				
+		$drag
+		.addClass( 'has-advanced-upload' ) 
+		.on( 'drag dragstart dragend dragover dragenter dragleave drop', function( e )
+		{
+			// preventing the unwanted behaviours
+			e.preventDefault();
+			e.stopPropagation();
+		})
+		.on( 'dragover dragenter', function() //
+		{
+			$drag.addClass( 'hover' );
+		})
+		.on( 'dragleave dragend drop', function()
+		{
+			$drag.removeClass( 'hover' );
+		})
+		.on( 'drop', function( e )
+		{
+			var files = e.originalEvent.target.files || e.originalEvent.dataTransfer.files;
+			var file = files[0];
+			openWS(file);
+		});
+		
+		var $upload = $("#fileupload")
+		
+		$upload.on("change", function () {
+			var file = $upload[0].files[0];
+			openWS(file);
+		});
+
+	}
+
+	window.onload = function() {
+		
+		if (data && cols) {
+			updateCols(cols);
+			drawChart(data);
+		}
+		
+		Papa.LocalChunkSize = 10024;
+		// initialize
+
+		//drawChart({'Total': 1300, 'Retail': {'Total': 600, 'Sweden': 100, 'EU': 200, 'International': 300}, 'Corporate': {'Total': 700, 'Sweden': 400, 'EU': 100, 'International': 200}});
+
+		// call initialization file
+		if (window.File && window.FileList && window.FileReader) {
+			Init();
+		}
+	}
+</script>
+</body>
+</html>
